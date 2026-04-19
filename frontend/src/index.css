@@ -1,0 +1,19 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  font-family: 'Inter', system_ui, sans-serif;
+}
+
+.chat-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+.chat-scroll::-webkit-scrollbar-thumb {
+  background-color: #64748b;
+  border-radius: 20px;
+}
+
+.dark .chat-scroll::-webkit-scrollbar-thumb {
+  background-color: #475569;
+}
