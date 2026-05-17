@@ -1,16 +1,22 @@
 import { Users, MessageCircle } from 'lucide-react';
 
-export default function ChatList({ chats, currentChat, setCurrentChat }) {
+export default function ChatList({ chats, currentChat, setCurrentChat, onCreateChat, onCreateGroup }) {
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
       <div className="p-4 border-b border-slate-800">
         <div className="flex gap-3">
-          <button className="flex-1 bg-blue-600 hover:bg-blue-700 py-3 rounded-2xl font-medium flex items-center justify-center gap-2 transition">
+          <button
+            onClick={onCreateChat}
+            className="flex-1 bg-blue-600 hover:bg-blue-700 py-3 rounded-2xl font-medium flex items-center justify-center gap-2 transition"
+          >
             <MessageCircle size={18} />
             New Chat
           </button>
-          <button className="flex-1 border border-slate-700 hover:bg-slate-800 py-3 rounded-2xl font-medium flex items-center justify-center gap-2 transition">
+          <button
+            onClick={onCreateGroup}
+            className="flex-1 border border-slate-700 hover:bg-slate-800 py-3 rounded-2xl font-medium flex items-center justify-center gap-2 transition"
+          >
             <Users size={18} />
             New Group
           </button>

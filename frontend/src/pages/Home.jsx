@@ -1,5 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
+import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
+import { API_ENDPOINTS } from '../config/api';
 import io from 'socket.io-client';
 import ChatList from '../components/ChatList';
 import ChatWindow from '../components/ChatWindow';
@@ -15,15 +17,85 @@ export default function Home() {
   const [onlineUsers, setOnlineUsers] = useState([]);
 
   const messagesEndRef = useRef(null);
+  const currentChatRef = useRef(null);
+
+  const fetchChats = async () => {
+    if (!user) return;
+
+    try {
+      const res = await axios.get(API_ENDPOINTS.CHATS.GET_CHATS);
+      setChats(res.data || []);
+      if (!currentChat && res.data?.length) {
+        setCurrentChat(res.data[0]);
+      }
+    } catch (err) {
+      console.error('Failed to load chats', err);
+    }
+  };
+
+  const createChat = async () => {
+    if (!user) return;
+
+    try {
+      const res = await axios.post(API_ENDPOINTS.CHATS.CREATE_CHAT, {
+        participants: [user._id]
+      });
+
+      setChats((prev) => [res.data, ...prev]);
+      setCurrentChat(res.data);
+    } catch (err) {
+      console.error('Failed to create chat', err);
+      alert('Unable to create chat.');
+    }
+  };
+
+  const createGroup = async () => {
+    if (!user) return;
+
+    const groupName = prompt('Enter group name');
+    if (!groupName) return;
+
+    try {
+      const res = await axios.post(API_ENDPOINTS.CHATS.CREATE_CHAT, {
+        participants: [user._id],
+        isGroup: true,
+        groupName,
+      });
+
+      setChats((prev) => [res.data, ...prev]);
+      setCurrentChat(res.data);
+    } catch (err) {
+      console.error('Failed to create group', err);
+      alert('Unable to create group.');
+    }
+  };
+
+  const fetchMessages = async (chatId) => {
+    if (!chatId) return;
+
+    try {
+      const res = await axios.get(API_ENDPOINTS.MESSAGES.GET_MESSAGES(chatId));
+      setMessages(res.data || []);
+    } catch (err) {
+      console.error('Failed to load messages', err);
+      setMessages([]);
+    }
+  };
+
+  useEffect(() => {
+    currentChatRef.current = currentChat;
+  }, [currentChat]);
 
   useEffect(() => {
     if (!user) return;
+
+    fetchChats();
 
     socket = io('http://localhost:5000');
     socket.emit('join', user._id);
 
     socket.on('newMessage', (message) => {
-      if (message.chat === currentChat?._id) {
+      if (message.chat === currentChatRef.current?._id) {
         setMessages(prev => [...prev, message]);
       }
     });
@@ -33,7 +105,12 @@ export default function Home() {
     });
 
     return () => socket.disconnect();
-  }, [user, currentChat]);
+  }, [user]);
+
+  useEffect(() => {
+    if (!currentChat) return;
+    fetchMessages(currentChat._id);
+  }, [currentChat]);
 
   const sendMessage = (content) => {
     if (!currentChat || !content.trim()) return;
@@ -56,9 +133,11 @@ export default function Home() {
         {/* Sidebar - Chat List */}
         <div className="w-80 border-r border-slate-800 bg-slate-900 flex flex-col">
           <ChatList 
-            chats={chats} 
-            currentChat={currentChat} 
-            setCurrentChat={setCurrentChat} 
+            chats={chats}
+            currentChat={currentChat}
+            setCurrentChat={setCurrentChat}
+            onCreateChat={createChat}
+            onCreateGroup={createGroup}
           />
         </div>
 
